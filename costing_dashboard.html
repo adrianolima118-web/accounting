@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flexible Costing Comparison - Direct vs ABC</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#dbe3ee;
+      --blue:#1d4ed8;
+      --green:#15803d;
+      --red:#b91c1c;
+      --shadow:0 10px 28px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#eef4ff 0%, var(--bg) 100%);
+      color:#000000;
+    }
+    .container{max-width:1500px;margin:0 auto;padding:24px}
+    .hero{
+      background:linear-gradient(135deg,#1d4ed8,#2563eb,#60a5fa);
+      color:#fff;padding:28px;border-radius:24px;box-shadow:var(--shadow);margin-bottom:24px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .flags{display:flex; gap:10px; align-items:center;}
+    .flag{
+      cursor:pointer;
+      font-size:24px;
+      line-height:1;
+      background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.25);
+      border-radius:12px;
+      padding:8px 10px;
+      user-select:none;
+    }
+    .flag.active{background:#fff;color:#1d4ed8}
+    .hero h1{margin:0 0 8px;font-size:32px}
+    .hero p{margin:0;line-height:1.55;max-width:1120px}
+    .author{font-size:13px;opacity:.95;margin-top:10px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+    button{
+      border:none;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;transition:.15s ease
+    }
+    button:hover{transform:translateY(-1px)}
+    .btn-light{background:#fff;color:var(--blue)}
+    .btn-blue{background:var(--blue);color:#fff}
+    .btn-green{background:#0f766e;color:#fff}
+    .btn-brown{background:#7c2d12;color:#fff}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+    .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+    .stat .label{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .stat .value{font-size:24px;font-weight:800}
+    .layout{display:grid;grid-template-columns:1.02fr 1.28fr;gap:24px}
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:22px;box-shadow:var(--shadow);margin-bottom:24px;
+    }
+    h2,h3{margin-top:0}
+    .subtle{color:#000000;font-size:14px;line-height:1.55}
+    .pill{
+      display:inline-block;padding:6px 10px;border-radius:999px;background:#dbeafe;
+      color:var(--blue);font-size:12px;font-weight:700
+    }
+    .section-header{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px
+    }
+    .formula{color:#000000;
+      background:#f8fafc;border:1px solid var(--line);border-radius:12px;
+      padding:12px;font-family:"Courier New", monospace;font-size:13px;line-height:1.7;margin-top:12px;
+      white-space:pre-line;
+    }
+    .formula.small-formula{font-size:12px; line-height:1.55;}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+    th,td{padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:middle}
+    th{background:#f8fafc;color:#334155}
+    tr:last-child td{border-bottom:none}
+    .compact-table{font-size:12.5px}
+    .compact-table th,.compact-table td{padding:9px 7px}
+    .compact-table input[type="number"], .compact-table input[type="text"]{font-size:12px;padding:8px 8px}
+    input[type="number"], input[type="text"]{
+      width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;
+      font-size:14px;outline:none;background:#fff
+    }
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    .correct{border-color:var(--green)!important;background:#dcfce7!important}
+    .incorrect{border-color:var(--red)!important;background:#fee2e2!important}
+    .check-cell{width:52px;text-align:center;font-size:20px;font-weight:900}
+    .ok{color:var(--green)}
+    .bad{color:var(--red)}
+    .feedback{
+      margin-top:16px;padding:14px 16px;border-radius:14px;background:#f8fafc;border:1px dashed #cbd5e1;line-height:1.6
+    }
+    .note{color:#000000;
+      background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px 12px;
+      font-size:14px;margin-top:12px
+    }
+    .live{color:#000000;
+      background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-top:14px;line-height:1.65
+    }
+    .compare-box{color:#000000;
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:14px;
+      background:#f0fdf4;
+      border:1px solid #bbf7d0;
+      line-height:1.65;
+    }
+    details{
+      margin-top:14px;
+      background:#fafafa;
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    summary{
+      cursor:pointer;
+      padding:12px 14px;
+      font-weight:700;
+      background:#f8fafc;
+      color:#334155;
+      user-select:none;
+    }
+    .details-content{
+      padding:14px;
+      border-top:1px solid var(--line);
+    }
+    @media (max-width:1150px){
+      .layout,.stats{grid-template-columns:1fr}
+      .topbar{align-items:stretch}
+    }
+  
+    .story{
+      background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:16px 18px;line-height:1.7;margin-top:14px;color:#111827;
+    }
+    .askbox{
+      margin-top:18px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+    }
+    .askbox textarea{
+      width:100%;
+      min-height:110px;
+      padding:12px;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      font-size:14px;
+      resize:vertical;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+    .ask-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .mini-btn{
+      border:none;
+      border-radius:10px;
+      padding:10px 12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .mini-btn.copy{background:#1d4ed8;color:#fff}
+    .mini-btn.fill{background:#e2e8f0;color:#1f2937}
+    .ask-note{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+
+    .decision-box{
+      margin-top:24px;
+      background:#ffffff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      color:#000000;
+    }
+    .decision-box textarea{
+      width:100%;
+      min-height:120px;
+      padding:12px;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      font-size:14px;
+      font-family:Arial, Helvetica, sans-serif;
+      resize:vertical;
+      color:#000000;
+    }
+    .decision-prompt{
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      margin-top:12px;
+      line-height:1.6;
+      color:#000000;
+    }
+    .memo-wrap{color:#111827;}
+    .memo-title{font-size:18px;font-weight:800;letter-spacing:.4px;margin-bottom:14px;}
+    .memo-meta{margin-bottom:4px;line-height:1.55;}
+    .memo-section{margin-top:18px;}
+    .memo-heading{font-weight:800;margin-bottom:8px;font-size:14px;text-transform:none;}
+    .memo-wrap p{margin:0 0 10px 0;line-height:1.7;}
+
+</style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="topbar">
+        <div>
+          <h1 id="heroTitle">Direct Costing vs ABC Costing</h1>
+          <p id="heroSubtitle">
+            Edit the parameters below. The header and formulas update automatically. Students can try the exercise first, and only open the answer sections if they need help.
+          </p>
+          <div class="author">By Adriano Lima e Silva</div>
+          <div class="story" id="caseNarrative"></div>
+          <div class="askbox">
+            <h3 id="askTitle" style="margin:0 0 8px 0;"></h3>
+            <p class="subtle" id="askSubtitle" style="margin-top:0;"></p>
+            <div class="formula" id="askPrompt" style="min-height:120px;"></div>
+            <div class="ask-actions">
+              <button class="mini-btn fill" id="fillPrompt1" onclick="fillPrompt(1)"></button>
+              <button class="mini-btn fill" id="fillPrompt2" onclick="fillPrompt(2)"></button>
+              <button class="mini-btn fill" id="fillPrompt3" onclick="fillPrompt(3)"></button>
+              <button class="mini-btn copy" id="copyPromptBtn" style="display:none;" onclick="fillPrompt(1)"></button>
+            </div>
+            <div class="ask-note" id="askNote"></div>
+          </div>
+
+        </div>
+        <div class="flags">
+          <span class="flag active" id="flag-en" onclick="setLang('en')">🇺🇸</span>
+          <span class="flag" id="flag-pt" onclick="setLang('pt')">🇧🇷</span>
+          <span class="flag" id="flag-es" onclick="setLang('es')">🇪🇸</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn-light" id="btnLoad" onclick="loadProvidedCase()"></button>
+        <button class="btn-green" id="btnRandom" onclick="generateRandomCase()"></button>
+        <button class="btn-blue" id="btnUpdate" style="display:none;" onclick="applyParameters()"></button>
+        <button class="btn-blue" id="btnCheck" onclick="checkAnswers()"></button>
+        <button class="btn-brown" id="btnRedo" onclick="resetExercise()"></button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><div class="label" id="statLbl1"></div><div class="value" id="statDirect2024">100.000</div></div>
+      <div class="stat"><div class="label" id="statLbl2"></div><div class="value" id="statIpca">0,00%</div></div>
+      <div class="stat"><div class="label" id="statLbl3"></div><div class="value" id="statOverhead2025">100.000</div></div>
+      <div class="stat"><div class="label" id="statLbl4"></div><div class="value" id="statABCTotal">108.000</div></div>
+    </section>
+
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="section-header">
+            <h2 id="editableTitle"></h2>
+            <span class="pill" id="editablePill"></span>
+          </div>
+          <p class="subtle" id="editableSubtitle"></p>
+
+          <h3 id="directInputsTitle"></h3>
+          <table>
+            <thead>
+              <tr><th id="paramHdr"></th><th id="valueHdr"></th></tr>
+            </thead>
+            <tbody>
+              <tr><td id="lblDirectCost2024"></td><td><input type="number" id="p_directCost2024" step="0.01"></td></tr>
+              <tr><td id="lblIpca"></td><td><input type="number" id="p_ipcaPct" step="0.01"></td></tr>
+              <tr><td id="lblHoursA"></td><td><input type="number" id="p_directHoursA" step="0.01"></td></tr>
+              <tr><td id="lblHoursB"></td><td><input type="number" id="p_directHoursB" step="0.01"></td></tr>
+              <tr><td id="lblUnitsA"></td><td><input type="number" id="p_unitsA" step="0.01"></td></tr>
+              <tr><td id="lblUnitsB"></td><td><input type="number" id="p_unitsB" step="0.01"></td></tr>
+            </tbody>
+          </table>
+
+          <details>
+            <summary id="summaryDirect"></summary>
+            <div class="details-content">
+              <div class="formula" id="directFormulaBox"></div>
+              <div class="live" id="directLiveBox"></div>
+            </div>
+          </details>
+
+          <h3 style="margin-top:24px;" id="abcInputsTitle"></h3>
+          <table class="compact-table">
+            <thead>
+              <tr>
+                <th id="abcHdrActivity"></th>
+                <th id="abcHdrCost"></th>
+                <th id="abcHdrDriver"></th>
+                <th id="abcHdrTotal"></th>
+                <th id="abcHdrA"></th>
+                <th id="abcHdrB"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="actSetup"></td>
+                <td><input type="number" id="p_abcSetupCost" step="0.01"></td>
+                <td><input type="text" id="p_abcSetupDriver"></td>
+                <td><input type="number" id="p_abcSetupTotal" step="0.01"></td>
+                <td><input type="number" id="p_abcSetupA" step="0.01"></td>
+                <td><input type="number" id="p_abcSetupB" step="0.01"></td>
+              </tr>
+              <tr>
+                <td id="actTests"></td>
+                <td><input type="number" id="p_abcTestCost" step="0.01"></td>
+                <td><input type="text" id="p_abcTestDriver"></td>
+                <td><input type="number" id="p_abcTestTotal" step="0.01"></td>
+                <td><input type="number" id="p_abcTestA" step="0.01"></td>
+                <td><input type="number" id="p_abcTestB" step="0.01"></td>
+              </tr>
+              <tr>
+                <td id="actMovement"></td>
+                <td><input type="number" id="p_abcMoveCost" step="0.01"></td>
+                <td><input type="text" id="p_abcMoveDriver"></td>
+                <td><input type="number" id="p_abcMoveTotal" step="0.01"></td>
+                <td><input type="number" id="p_abcMoveA" step="0.01"></td>
+                <td><input type="number" id="p_abcMoveB" step="0.01"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <details>
+            <summary id="summaryABC"></summary>
+            <div class="details-content">
+              <div class="formula small-formula" id="abcFormulaBox"></div>
+              <div class="live" id="abcLiveBox"></div>
+              <div class="compare-box" id="compareBox"></div>
+            </div>
+          </details>
+
+          <div class="note" id="noteText"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2 id="studentDirectTitle"></h2>
+          <table>
+            <thead>
+              <tr><th id="studentItemHdr1"></th><th id="studentAnswerHdr1"></th><th id="studentCheckHdr1"></th></tr>
+            </thead>
+            <tbody>
+              <tr><td id="ansDirect1"></td><td><input type="number" id="d_overhead_2025" step="0.01"></td><td class="check-cell" id="c_d_overhead_2025"></td></tr>
+              <tr><td id="ansDirect2"></td><td><input type="number" id="d_total_hours" step="0.01"></td><td class="check-cell" id="c_d_total_hours"></td></tr>
+              <tr><td id="ansDirect3"></td><td><input type="number" id="d_hour_rate" step="0.01"></td><td class="check-cell" id="c_d_hour_rate"></td></tr>
+              <tr><td id="ansDirect4"></td><td><input type="number" id="d_alloc_a" step="0.01"></td><td class="check-cell" id="c_d_alloc_a"></td></tr>
+              <tr><td id="ansDirect5"></td><td><input type="number" id="d_alloc_b" step="0.01"></td><td class="check-cell" id="c_d_alloc_b"></td></tr>
+              <tr><td id="ansDirect6"></td><td><input type="number" id="d_unit_a" step="0.01"></td><td class="check-cell" id="c_d_unit_a"></td></tr>
+              <tr><td id="ansDirect7"></td><td><input type="number" id="d_unit_b" step="0.01"></td><td class="check-cell" id="c_d_unit_b"></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2 id="studentABCTitle"></h2>
+          <table>
+            <thead>
+              <tr><th id="studentItemHdr2"></th><th id="studentAnswerHdr2"></th><th id="studentCheckHdr2"></th></tr>
+            </thead>
+            <tbody>
+              <tr><td id="ansABC1"></td><td><input type="number" id="abc_setup_rate" step="0.01"></td><td class="check-cell" id="c_abc_setup_rate"></td></tr>
+              <tr><td id="ansABC2"></td><td><input type="number" id="abc_test_rate" step="0.01"></td><td class="check-cell" id="c_abc_test_rate"></td></tr>
+              <tr><td id="ansABC3"></td><td><input type="number" id="abc_move_rate" step="0.01"></td><td class="check-cell" id="c_abc_move_rate"></td></tr>
+              <tr><td id="ansABC4"></td><td><input type="number" id="abc_a_setup" step="0.01"></td><td class="check-cell" id="c_abc_a_setup"></td></tr>
+              <tr><td id="ansABC5"></td><td><input type="number" id="abc_a_test" step="0.01"></td><td class="check-cell" id="c_abc_a_test"></td></tr>
+              <tr><td id="ansABC6"></td><td><input type="number" id="abc_a_move" step="0.01"></td><td class="check-cell" id="c_abc_a_move"></td></tr>
+              <tr><td id="ansABC7"></td><td><input type="number" id="abc_a_total" step="0.01"></td><td class="check-cell" id="c_abc_a_total"></td></tr>
+              <tr><td id="ansABC8"></td><td><input type="number" id="abc_unit_a" step="0.01"></td><td class="check-cell" id="c_abc_unit_a"></td></tr>
+              <tr><td id="ansABC9"></td><td><input type="number" id="abc_b_setup" step="0.01"></td><td class="check-cell" id="c_abc_b_setup"></td></tr>
+              <tr><td id="ansABC10"></td><td><input type="number" id="abc_b_test" step="0.01"></td><td class="check-cell" id="c_abc_b_test"></td></tr>
+              <tr><td id="ansABC11"></td><td><input type="number" id="abc_b_move" step="0.01"></td><td class="check-cell" id="c_abc_b_move"></td></tr>
+              <tr><td id="ansABC12"></td><td><input type="number" id="abc_b_total" step="0.01"></td><td class="check-cell" id="c_abc_b_total"></td></tr>
+              <tr><td id="ansABC13"></td><td><input type="number" id="abc_unit_b" step="0.01"></td><td class="check-cell" id="c_abc_unit_b"></td></tr>
+            </tbody>
+          </table>
+
+          <div class="feedback" id="feedbackBox"></div>
+        </div>
+        <div class="decision-box">
+          <h2 id="decisionTitle"></h2>
+          <p id="decisionSubtitle" class="subtle"></p>
+          <div class="decision-prompt" id="decisionPrompt"></div>
+          <div style="margin-top:12px;">
+            <label id="decisionLabel" style="display:none;" for="decisionResponse" style="display:block;font-weight:700;margin-bottom:8px;"></label>
+            <div class="decision-prompt" id="decisionMemo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const translations = {
+  en: {
+    btnLoad: "Load your ABC example",
+    btnRandom: "Generate random case",
+    btnUpdate: "Update case",
+    btnCheck: "Check answers",
+    btnRedo: "Redo exercise",
+    statLbl1: "Direct overhead 2024",
+    statLbl2: "Inflation Index 2025",
+    statLbl3: "Overhead 2025",
+    statLbl4: "ABC total cost",
+    editableTitle: "Editable parameters",
+    editablePill: "The case changes live",
+    editableSubtitle: "Change the assumptions. Students can use these inputs to solve the exercise. The answer can stay hidden until they open it.",
+    directInputsTitle: "Direct costing inputs",
+    paramHdr: "Parameter",
+    valueHdr: "Value",
+    lblDirectCost2024: "Direct overhead 2024",
+    lblIpca: "Inflation Index 2025 (%)",
+    lblHoursA: "Hours-machine A",
+    lblHoursB: "Hours-machine B",
+    lblUnitsA: "Units A",
+    lblUnitsB: "Units B",
+    summaryDirect: "Show direct costing solution path",
+    abcInputsTitle: "ABC inputs",
+    abcHdrActivity: "Activity",
+    abcHdrCost: "Cost",
+    abcHdrDriver: "Driver label",
+    abcHdrTotal: "Total",
+    abcHdrA: "A",
+    abcHdrB: "B",
+    actSetup: "Setup",
+    actTests: "Tests",
+    actMovement: "Movement",
+    summaryABC: "Show ABC solution path",
+    noteText: "This is a very good learning exercise. It becomes even better this way because students can first try alone, and only open the dropdown if they need support.",
+    studentDirectTitle: "Student answers — Direct costing",
+    studentABCTitle: "Student answers — ABC",
+    item: "Item",
+    answer: "Student answer",
+    check: "Check",
+    ansDirect1: "Overhead 2025",
+    ansDirect2: "Total hours-machine",
+    ansDirect3: "Rate per hour-machine",
+    ansDirect4: "Allocation A",
+    ansDirect5: "Allocation B",
+    ansDirect6: "Direct cost per unit A",
+    ansDirect7: "Direct cost per unit B",
+    ansABC1: "Setup rate",
+    ansABC2: "Test rate",
+    ansABC3: "Movement rate",
+    ansABC4: "Product A - Setup",
+    ansABC5: "Product A - Tests",
+    ansABC6: "Product A - Movement",
+    ansABC7: "Total A",
+    ansABC8: "ABC cost per unit A",
+    ansABC9: "Product B - Setup",
+    ansABC10: "Product B - Tests",
+    ansABC11: "Product B - Movement",
+    ansABC12: "Total B",
+    ansABC13: "ABC cost per unit B",
+    feedbackDefault: "Students can first try the exercise. If they get stuck, they can open the dropdown sections on the left to see the solution path.",
+    currentCasePrefix: "Current case",
+    studentsTry: "Students can try first and open the solution only if needed.",
+    directVsABC: "Direct vs ABC",
+    units: "units",
+    howCalcDirect: "How to calculate — Direct costing",
+    howCalcABC: "How to calculate — ABC",
+    directAnswer: "Direct costing answer",
+    abcAnswer: "ABC answer",
+    methodComparison: "Method comparison",
+    productA: "Product A",
+    productB: "Product B",
+    difference: "Difference",
+    methodExplain: "This makes it easier to discuss overcosting and undercosting under a single allocation rate.",
+    result: "Result",
+    excellent: "Excellent.",
+    allCorrect: "All calculations are correct.",
+    goodWork: "Good work.",
+    fewReview: "Only a few calculations need review.",
+    reviewFormulas: "Review the formulas.",
+    checkRate: "Check the direct rate, ABC rates, and unit costs.",
+    error: "Error",
+    errNonNegative: "Please enter valid non-negative numbers in all numeric parameter fields.",
+    errABCZero: "ABC driver totals cannot be zero.",
+    errUnitsZero: "Units A and Units B cannot be zero.",
+    errSetup: "Setup A + B must equal Setup total.",
+    errTests: "Tests A + B must equal Tests total.",
+    errMove: "Movement A + B must equal Movement total.",
+    caseUpdated: "Case updated. Students can keep the answers hidden or open the dropdown sections if they need help.",
+    studentCleared: "Student answer fields were cleared. Parameters remain the same, and the answer sections stay hidden until opened.",
+    randomApplied: "Random case generated and applied successfully.",
+    exampleLoaded: "Your editable example is loaded. Students can keep the answers hidden in the dropdowns and only open them if needed.",
+    askTitle: "Guided explanations",
+    askSubtitle: "Use the buttons below to load built-in explanations of direct costing, ABC, and method comparison. No external API is required.",
+    copyPromptBtn: "Load explanation",
+    fillPrompt1: "Direct costing",
+    fillPrompt2: "ABC",
+    fillPrompt3: "Compare methods",
+    askNote: "This section already includes the explanations inside the page. Students can read them here without opening any external tool.",
+    narrative: "Case narrative: A manufacturing company produces Product A and Product B. Management wants to understand whether a single overhead allocation rate gives a fair view of product cost, or whether Activity-Based Costing provides a more accurate result. Students must calculate overhead allocation under the direct method, then recalculate the same case using ABC. The goal is to identify how different consumption of setups, tests, and movements can change the cost per unit and potentially distort managerial decisions.",
+    prompt1: "Direct costing explanation:\n\nUnder direct costing with a single overhead rate, the first step is to update the 2024 overhead by Inflation Index to obtain overhead 2025. Next, add the total hours-machine of Products A and B. Divide the updated overhead by the total hours-machine to find one common rate per hour-machine. Then multiply that rate by the hours-machine consumed by Product A and by Product B to determine each product\'s allocated overhead. Finally, divide the allocated overhead of each product by its number of units produced to obtain cost per unit. This method is simple and easy to apply, but it may distort product cost when products consume activities differently.",
+    prompt2: "ABC explanation:\n\nUnder Activity-Based Costing, overhead is split into activity pools such as setup, tests, and movement. For each activity, divide the activity cost by the total quantity of its driver to obtain an activity rate. Then multiply that activity rate by the amount consumed by Product A and by Product B. After calculating setup, test, and movement costs for each product, add them to find the total ABC cost assigned to each product. Finally, divide each product\'s ABC total by its units produced to obtain the ABC cost per unit. This method is more detailed and usually more accurate when different products consume overhead activities in different proportions.",
+    prompt3: "Method comparison explanation:\n\nThe direct method uses one single allocation base, so it assumes both products consume overhead in proportion to hours-machine only. ABC, however, recognizes that products may require different numbers of setups, tests, and movements. When a product uses more complex support activities, ABC usually assigns more overhead to it. Comparing the two methods helps students identify whether one product is being overcosted or undercosted under the single-rate method. This matters for pricing, product mix, profitability analysis, and managerial decision-making, because an inaccurate cost can lead the company to make the wrong strategic choice."
+  },
+  pt: {
+    btnLoad: "Carregar exemplo ABC",
+    btnRandom: "Gerar caso aleatório",
+    btnUpdate: "Atualizar caso",
+    btnCheck: "Checar respostas",
+    btnRedo: "Refazer exercício",
+    statLbl1: "Overhead direto 2024",
+    statLbl2: "Inflation Index 2025",
+    statLbl3: "Overhead 2025",
+    statLbl4: "Custo total ABC",
+    editableTitle: "Parâmetros editáveis",
+    editablePill: "O caso muda em tempo real",
+    editableSubtitle: "Altere as premissas. Os alunos podem usar esses dados para resolver o exercício. A resposta pode ficar oculta até que eles a abram.",
+    directInputsTitle: "Entradas do custeio direto",
+    paramHdr: "Parâmetro",
+    valueHdr: "Valor",
+    lblDirectCost2024: "Overhead direto 2024",
+    lblIpca: "Inflation Index 2025 (%)",
+    lblHoursA: "Horas-máquina A",
+    lblHoursB: "Horas-máquina B",
+    lblUnitsA: "Unidades A",
+    lblUnitsB: "Unidades B",
+    summaryDirect: "Mostrar solução do custeio direto",
+    abcInputsTitle: "Entradas do ABC",
+    abcHdrActivity: "Atividade",
+    abcHdrCost: "Custo",
+    abcHdrDriver: "Nome do driver",
+    abcHdrTotal: "Total",
+    abcHdrA: "A",
+    abcHdrB: "B",
+    actSetup: "Setup",
+    actTests: "Testes",
+    actMovement: "Movimentação",
+    summaryABC: "Mostrar solução do ABC",
+    noteText: "Este é um exercício muito bom de aprendizagem. Ele fica ainda melhor assim porque os alunos podem tentar sozinhos primeiro e só abrir o dropdown se precisarem de apoio.",
+    studentDirectTitle: "Respostas do aluno — Custeio direto",
+    studentABCTitle: "Respostas do aluno — ABC",
+    item: "Item",
+    answer: "Resposta do aluno",
+    check: "Check",
+    ansDirect1: "Overhead 2025",
+    ansDirect2: "Horas-máquina totais",
+    ansDirect3: "Taxa por hora-máquina",
+    ansDirect4: "Alocação A",
+    ansDirect5: "Alocação B",
+    ansDirect6: "Custo direto por unidade A",
+    ansDirect7: "Custo direto por unidade B",
+    ansABC1: "Taxa de setup",
+    ansABC2: "Taxa de testes",
+    ansABC3: "Taxa de movimentação",
+    ansABC4: "Produto A - Setup",
+    ansABC5: "Produto A - Testes",
+    ansABC6: "Produto A - Movimentação",
+    ansABC7: "Total A",
+    ansABC8: "Custo ABC por unidade A",
+    ansABC9: "Produto B - Setup",
+    ansABC10: "Produto B - Testes",
+    ansABC11: "Produto B - Movimentação",
+    ansABC12: "Total B",
+    ansABC13: "Custo ABC por unidade B",
+    feedbackDefault: "Os alunos podem primeiro tentar o exercício. Se tiverem dificuldade, podem abrir os dropdowns à esquerda para ver o caminho da solução.",
+    currentCasePrefix: "Caso atual",
+    studentsTry: "Os alunos podem tentar primeiro e abrir a solução apenas se precisarem.",
+    directVsABC: "Direto vs ABC",
+    units: "unid.",
+    howCalcDirect: "Como calcular — Custeio direto",
+    howCalcABC: "Como calcular — ABC",
+    directAnswer: "Resposta do custeio direto",
+    abcAnswer: "Resposta do ABC",
+    methodComparison: "Comparação dos métodos",
+    productA: "Produto A",
+    productB: "Produto B",
+    difference: "Diferença",
+    methodExplain: "Isso facilita discutir supercusteio e subcusteio sob uma única taxa de alocação.",
+    result: "Resultado",
+    excellent: "Excelente.",
+    allCorrect: "Todos os cálculos estão corretos.",
+    goodWork: "Muito bom.",
+    fewReview: "Apenas alguns cálculos precisam de revisão.",
+    reviewFormulas: "Revise as fórmulas.",
+    checkRate: "Confira a taxa direta, as taxas ABC e os custos por unidade.",
+    error: "Erro",
+    errNonNegative: "Insira números válidos e não negativos em todos os campos numéricos.",
+    errABCZero: "Os totais dos drivers do ABC não podem ser zero.",
+    errUnitsZero: "Unidades A e Unidades B não podem ser zero.",
+    errSetup: "Setup A + B deve ser igual ao total de setup.",
+    errTests: "Testes A + B deve ser igual ao total de testes.",
+    errMove: "Movimentação A + B deve ser igual ao total de movimentação.",
+    caseUpdated: "Caso atualizado. Os alunos podem manter as respostas ocultas ou abrir os dropdowns se precisarem de ajuda.",
+    studentCleared: "Os campos de resposta do aluno foram limpos. Os parâmetros permanecem iguais e as soluções continuam ocultas até serem abertas.",
+    randomApplied: "Caso aleatório gerado e aplicado com sucesso.",
+    exampleLoaded: "Seu exemplo editável foi carregado. Os alunos podem manter as respostas ocultas nos dropdowns e abri-las apenas se precisarem.",
+    askTitle: "Explicações guiadas",
+    askSubtitle: "Use os botões abaixo para carregar explicações internas sobre custeio direto, ABC e comparação dos métodos. Nenhuma API externa é necessária.",
+    copyPromptBtn: "Carregar explicação",
+    fillPrompt1: "Custeio direto",
+    fillPrompt2: "ABC",
+    fillPrompt3: "Comparar métodos",
+    askNote: "Esta seção já inclui as explicações dentro da própria página. Os alunos podem lê-las aqui sem abrir nenhuma ferramenta externa.",
+    narrative: "Narrativa do caso: Uma empresa industrial produz o Produto A e o Produto B. A gestão quer entender se uma única taxa de alocação de overhead oferece uma visão justa do custo dos produtos ou se o Custeio Baseado em Atividades fornece um resultado mais preciso. Os alunos devem calcular a alocação do overhead pelo método direto e depois recalcular o mesmo caso usando ABC. O objetivo é identificar como diferentes consumos de setups, testes e movimentações podem alterar o custo por unidade e potencialmente distorcer decisões gerenciais.",
+    prompt1: "Explicação do custeio direto:\n\nNo custeio direto com uma única taxa de overhead, o primeiro passo é atualizar o overhead de 2024 pelo Inflation Index para obter o overhead de 2025. Em seguida, somam-se as horas-máquina totais dos Produtos A e B. Divide-se o overhead atualizado pelas horas-máquina totais para encontrar uma taxa única por hora-máquina. Depois, multiplica-se essa taxa pelas horas-máquina consumidas pelo Produto A e pelo Produto B para determinar o overhead alocado a cada produto. Por fim, divide-se o overhead alocado de cada produto pelo número de unidades produzidas para encontrar o custo por unidade. Esse método é simples e fácil de aplicar, mas pode distorcer o custo quando os produtos consomem atividades de forma diferente.",
+    prompt2: "Explicação do ABC:\n\nNo Custeio Baseado em Atividades, o overhead é separado em pools de atividades, como setup, testes e movimentação. Para cada atividade, divide-se o custo da atividade pela quantidade total do driver para obter a taxa da atividade. Depois, multiplica-se essa taxa pela quantidade consumida pelo Produto A e pelo Produto B. Após calcular os custos de setup, testes e movimentação para cada produto, somam-se esses valores para encontrar o custo total ABC atribuído a cada produto. Por fim, divide-se o total ABC de cada produto pelo número de unidades produzidas para encontrar o custo ABC por unidade. Esse método é mais detalhado e geralmente mais preciso quando produtos diferentes consomem atividades indiretas em proporções diferentes.",
+    prompt3: "Explicação da comparação dos métodos:\n\nO método direto usa uma única base de alocação e, por isso, assume que ambos os produtos consomem overhead apenas em proporção às horas-máquina. Já o ABC reconhece que os produtos podem exigir quantidades diferentes de setups, testes e movimentações. Quando um produto utiliza mais atividades de suporte, o ABC tende a atribuir mais overhead a ele. Comparar os dois métodos ajuda os alunos a identificar se um produto está sendo supercusteado ou subcusteado no método de taxa única. Isso é importante para precificação, mix de produtos, análise de rentabilidade e tomada de decisão gerencial, pois um custo incorreto pode levar a escolhas estratégicas equivocadas."
+  },
+  es: {
+    btnLoad: "Cargar ejemplo ABC",
+    btnRandom: "Generar caso aleatorio",
+    btnUpdate: "Actualizar caso",
+    btnCheck: "Verificar respuestas",
+    btnRedo: "Rehacer ejercicio",
+    statLbl1: "Overhead directo 2024",
+    statLbl2: "Inflation Index 2025",
+    statLbl3: "Overhead 2025",
+    statLbl4: "Costo total ABC",
+    editableTitle: "Parámetros editables",
+    editablePill: "El caso cambia en tiempo real",
+    editableSubtitle: "Cambia los supuestos. Los estudiantes pueden usar estos datos para resolver el ejercicio. La respuesta puede permanecer oculta hasta que la abran.",
+    directInputsTitle: "Entradas del costeo directo",
+    paramHdr: "Parámetro",
+    valueHdr: "Valor",
+    lblDirectCost2024: "Overhead directo 2024",
+    lblIpca: "Inflation Index 2025 (%)",
+    lblHoursA: "Horas-máquina A",
+    lblHoursB: "Horas-máquina B",
+    lblUnitsA: "Unidades A",
+    lblUnitsB: "Unidades B",
+    summaryDirect: "Mostrar solución del costeo directo",
+    abcInputsTitle: "Entradas del ABC",
+    abcHdrActivity: "Actividad",
+    abcHdrCost: "Costo",
+    abcHdrDriver: "Nombre del driver",
+    abcHdrTotal: "Total",
+    abcHdrA: "A",
+    abcHdrB: "B",
+    actSetup: "Setup",
+    actTests: "Pruebas",
+    actMovement: "Movimiento",
+    summaryABC: "Mostrar solución del ABC",
+    noteText: "Este es un muy buen ejercicio de aprendizaje. Queda aún mejor así porque los estudiantes pueden intentarlo solos primero y abrir el desplegable solo si necesitan apoyo.",
+    studentDirectTitle: "Respuestas del estudiante — Costeo directo",
+    studentABCTitle: "Respuestas del estudiante — ABC",
+    item: "Ítem",
+    answer: "Respuesta del estudiante",
+    check: "Check",
+    ansDirect1: "Overhead 2025",
+    ansDirect2: "Horas-máquina totales",
+    ansDirect3: "Tasa por hora-máquina",
+    ansDirect4: "Asignación A",
+    ansDirect5: "Asignación B",
+    ansDirect6: "Costo directo por unidad A",
+    ansDirect7: "Costo directo por unidad B",
+    ansABC1: "Tasa de setup",
+    ansABC2: "Tasa de pruebas",
+    ansABC3: "Tasa de movimiento",
+    ansABC4: "Producto A - Setup",
+    ansABC5: "Producto A - Pruebas",
+    ansABC6: "Producto A - Movimiento",
+    ansABC7: "Total A",
+    ansABC8: "Costo ABC por unidad A",
+    ansABC9: "Producto B - Setup",
+    ansABC10: "Producto B - Pruebas",
+    ansABC11: "Producto B - Movimiento",
+    ansABC12: "Total B",
+    ansABC13: "Costo ABC por unidad B",
+    feedbackDefault: "Los estudiantes pueden intentar primero el ejercicio. Si tienen dificultad, pueden abrir los desplegables de la izquierda para ver el camino de la solución.",
+    currentCasePrefix: "Caso actual",
+    studentsTry: "Los estudiantes pueden intentar primero y abrir la solución solo si la necesitan.",
+    directVsABC: "Directo vs ABC",
+    units: "unid.",
+    howCalcDirect: "Cómo calcular — Costeo directo",
+    howCalcABC: "Cómo calcular — ABC",
+    directAnswer: "Respuesta del costeo directo",
+    abcAnswer: "Respuesta del ABC",
+    methodComparison: "Comparación de métodos",
+    productA: "Producto A",
+    productB: "Producto B",
+    difference: "Diferencia",
+    methodExplain: "Esto facilita discutir sobrecosteo y subcosteo bajo una sola tasa de asignación.",
+    result: "Resultado",
+    excellent: "Excelente.",
+    allCorrect: "Todos los cálculos son correctos.",
+    goodWork: "Muy bien.",
+    fewReview: "Solo algunos cálculos necesitan revisión.",
+    reviewFormulas: "Revisa las fórmulas.",
+    checkRate: "Verifica la tasa directa, las tasas ABC y los costos por unidad.",
+    error: "Error",
+    errNonNegative: "Ingresa números válidos y no negativos en todos los campos numéricos.",
+    errABCZero: "Los totales de los drivers ABC no pueden ser cero.",
+    errUnitsZero: "Las unidades A y B no pueden ser cero.",
+    errSetup: "Setup A + B debe ser igual al total de setup.",
+    errTests: "Pruebas A + B debe ser igual al total de pruebas.",
+    errMove: "Movimiento A + B debe ser igual al total de movimiento.",
+    caseUpdated: "Caso actualizado. Los estudiantes pueden mantener las respuestas ocultas o abrir los desplegables si necesitan ayuda.",
+    studentCleared: "Los campos de respuesta del estudiante fueron borrados. Los parámetros permanecen iguales y las soluciones siguen ocultas hasta abrirse.",
+    randomApplied: "Caso aleatorio generado y aplicado correctamente.",
+    exampleLoaded: "Tu ejemplo editable fue cargado. Los estudiantes pueden mantener las respuestas ocultas en los desplegables y abrirlas solo si las necesitan.",
+    askTitle: "Explicaciones guiadas",
+    askSubtitle: "Usa los botones de abajo para cargar explicaciones internas sobre costeo directo, ABC y comparación de métodos. No se requiere ninguna API externa.",
+    copyPromptBtn: "Carregar explicação",
+    fillPrompt1: "Costeo directo",
+    fillPrompt2: "ABC",
+    fillPrompt3: "Comparar métodos",
+    askNote: "Esta sección ya incluye las explicaciones dentro de la propia página. Los estudiantes pueden leerlas aquí sin abrir ninguna herramienta externa.",
+    narrative: "Narrativa del caso: Una empresa manufacturera produce el Producto A y el Producto B. La gerencia quiere entender si una sola tasa de asignación de overhead ofrece una visión justa del costo de los productos, o si el Costeo Basado en Actividades proporciona un resultado más preciso. Los estudiantes deben calcular la asignación del overhead bajo el método directo y luego recalcular el mismo caso usando ABC. El objetivo es identificar cómo diferentes consumos de setups, pruebas y movimientos pueden cambiar el costo por unidad y potencialmente distorsionar las decisiones gerenciales.",
+    prompt1: "Explicación del costeo directo:\n\nEn el costeo directo con una sola tasa de overhead, el primer paso es actualizar el overhead de 2024 por el Inflation Index para obtener el overhead de 2025. Luego se suman las horas-máquina totales de los Productos A y B. Se divide el overhead actualizado por las horas-máquina totales para encontrar una tasa única por hora-máquina. Después, se multiplica esa tasa por las horas-máquina consumidas por el Producto A y por el Producto B para determinar el overhead asignado a cada producto. Finalmente, se divide el overhead asignado de cada producto por el número de unidades producidas para obtener el costo por unidad. Este método es simple y fácil de aplicar, pero puede distorsionar el costo cuando los productos consumen actividades de manera diferente.",
+    prompt2: "Explicación del ABC:\n\nEn el Costeo Basado en Actividades, el overhead se divide en grupos de actividades, como setup, pruebas y movimiento. Para cada actividad, se divide el costo de la actividad por la cantidad total de su driver para obtener una tasa de actividad. Luego se multiplica esa tasa por la cantidad consumida por el Producto A y por el Producto B. Después de calcular los costos de setup, pruebas y movimiento para cada producto, se suman para encontrar el costo total ABC asignado a cada producto. Finalmente, se divide el total ABC de cada producto por sus unidades producidas para obtener el costo ABC por unidad. Este método es más detallado y normalmente más preciso cuando distintos productos consumen actividades indirectas en proporciones diferentes.",
+    prompt3: "Explicación de la comparación de métodos:\n\nEl método directo usa una sola base de asignación y por eso supone que ambos productos consumen overhead solamente en proporción a las horas-máquina. ABC, en cambio, reconoce que los productos pueden requerir diferentes cantidades de setups, pruebas y movimientos. Cuando un producto utiliza más actividades de apoyo, ABC normalmente le asigna más overhead. Comparar ambos métodos ayuda a los estudiantes a identificar si un producto está sobrecosteado o subcosteado bajo el método de tasa única. Esto es importante para fijación de precios, mezcla de productos, análisis de rentabilidad y toma de decisiones gerenciales, porque un costo inexacto puede llevar a una decisión estratégica equivocada."
+  }
+};
+
+let currentLang = 'en';
+let currentCase = {};
+let lastFeedbackKey = 'feedbackDefault';
+
+function t(key){ return translations[currentLang][key] || key; }
+
+
+function getCurrency(){
+  if(currentLang === 'en') return '$';
+  if(currentLang === 'es') return '€';
+  return 'R$';
+}
+
+function round2(n){ return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
+function brNum(n, d=0){ return Number(n).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function brCurrency(n){ return '' + Number(n).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function brPct(n){ return Number(n).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%'; }
+
+function applyStaticTranslations(){
+  const map = {
+    btnLoad:'btnLoad', btnRandom:'btnRandom', btnUpdate:'btnUpdate', btnCheck:'btnCheck', btnRedo:'btnRedo',
+    statLbl1:'statLbl1', statLbl2:'statLbl2', statLbl3:'statLbl3', statLbl4:'statLbl4',
+    editableTitle:'editableTitle', editablePill:'editablePill', editableSubtitle:'editableSubtitle',
+    directInputsTitle:'directInputsTitle', paramHdr:'paramHdr', valueHdr:'valueHdr',
+    lblDirectCost2024:'lblDirectCost2024', lblIpca:'lblIpca', lblHoursA:'lblHoursA', lblHoursB:'lblHoursB', lblUnitsA:'lblUnitsA', lblUnitsB:'lblUnitsB',
+    summaryDirect:'summaryDirect', abcInputsTitle:'abcInputsTitle', abcHdrActivity:'abcHdrActivity', abcHdrCost:'abcHdrCost',
+    abcHdrDriver:'abcHdrDriver', abcHdrTotal:'abcHdrTotal', abcHdrA:'abcHdrA', abcHdrB:'abcHdrB',
+    actSetup:'actSetup', actTests:'actTests', actMovement:'actMovement', summaryABC:'summaryABC', noteText:'noteText',
+    studentDirectTitle:'studentDirectTitle', studentABCTitle:'studentABCTitle',
+    studentItemHdr1:'item', studentAnswerHdr1:'answer', studentCheckHdr1:'check',
+    studentItemHdr2:'item', studentAnswerHdr2:'answer', studentCheckHdr2:'check',
+    ansDirect1:'ansDirect1', ansDirect2:'ansDirect2', ansDirect3:'ansDirect3', ansDirect4:'ansDirect4',
+    ansDirect5:'ansDirect5', ansDirect6:'ansDirect6', ansDirect7:'ansDirect7',
+    ansABC1:'ansABC1', ansABC2:'ansABC2', ansABC3:'ansABC3', ansABC4:'ansABC4', ansABC5:'ansABC5',
+    ansABC6:'ansABC6', ansABC7:'ansABC7', ansABC8:'ansABC8', ansABC9:'ansABC9', ansABC10:'ansABC10',
+    ansABC11:'ansABC11', ansABC12:'ansABC12', ansABC13:'ansABC13',
+    askTitle:'askTitle', askSubtitle:'askSubtitle', fillPrompt1:'fillPrompt1', fillPrompt2:'fillPrompt2',
+    fillPrompt3:'fillPrompt3', copyPromptBtn:'copyPromptBtn', askNote:'askNote',
+    decisionTitle:'decisionTitle', decisionSubtitle:'decisionSubtitle', decisionLabel:'decisionLabel', decisionPrompt:'decisionPrompt'
+  };
+  Object.entries(map).forEach(([id,key]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  });
+
+  document.getElementById('feedbackBox').innerHTML = t(lastFeedbackKey);
+  document.getElementById('caseNarrative').textContent = t('narrative');
+
+  ['en','pt','es'].forEach(l => {
+    document.getElementById('flag-'+l).classList.toggle('active', l === currentLang);
+  });
+}
+
+function setLang(lang){
+  currentLang = lang;
+  applyStaticTranslations();
+  renderDynamic();
+}
+
+function clearChecks(){
+  document.querySelectorAll('input[id^="d_"], input[id^="abc_"]').forEach(inp=>{
+    if(!inp.id.startsWith('p_')) inp.classList.remove('correct','incorrect');
+  });
+  document.querySelectorAll('.check-cell').forEach(c=>c.innerHTML='');
+}
+function clearStudentInputs(){
+  document.querySelectorAll('input[id^="d_"], input[id^="abc_"]').forEach(inp=>{
+    if(!inp.id.startsWith('p_')) inp.value='';
+  });
+}
+
+function getParametersFromInputs(){
+  return {
+    directCost2024: Number(document.getElementById('p_directCost2024').value),
+    ipcaPct: Number(document.getElementById('p_ipcaPct').value),
+    directHoursA: Number(document.getElementById('p_directHoursA').value),
+    directHoursB: Number(document.getElementById('p_directHoursB').value),
+    unitsA: Number(document.getElementById('p_unitsA').value),
+    unitsB: Number(document.getElementById('p_unitsB').value),
+
+    abcSetupCost: Number(document.getElementById('p_abcSetupCost').value),
+    abcSetupDriver: document.getElementById('p_abcSetupDriver').value || 'no. setups',
+    abcSetupTotal: Number(document.getElementById('p_abcSetupTotal').value),
+    abcSetupA: Number(document.getElementById('p_abcSetupA').value),
+    abcSetupB: Number(document.getElementById('p_abcSetupB').value),
+
+    abcTestCost: Number(document.getElementById('p_abcTestCost').value),
+    abcTestDriver: document.getElementById('p_abcTestDriver').value || 'no. tests',
+    abcTestTotal: Number(document.getElementById('p_abcTestTotal').value),
+    abcTestA: Number(document.getElementById('p_abcTestA').value),
+    abcTestB: Number(document.getElementById('p_abcTestB').value),
+
+    abcMoveCost: Number(document.getElementById('p_abcMoveCost').value),
+    abcMoveDriver: document.getElementById('p_abcMoveDriver').value || 'movements',
+    abcMoveTotal: Number(document.getElementById('p_abcMoveTotal').value),
+    abcMoveA: Number(document.getElementById('p_abcMoveA').value),
+    abcMoveB: Number(document.getElementById('p_abcMoveB').value)
+  };
+}
+
+function populateParameterInputs(c){
+  for (const [k,v] of Object.entries(c)) {
+    const el = document.getElementById('p_' + k);
+    if (el) el.value = v;
+  }
+}
+
+function validateParameters(c){
+  const nums = [
+    c.directCost2024, c.directHoursA, c.directHoursB, c.unitsA, c.unitsB,
+    c.abcSetupCost, c.abcSetupTotal, c.abcSetupA, c.abcSetupB,
+    c.abcTestCost, c.abcTestTotal, c.abcTestA, c.abcTestB,
+    c.abcMoveCost, c.abcMoveTotal, c.abcMoveA, c.abcMoveB
+  ];
+  if(nums.some(v => isNaN(v) || v < 0)) return t('errNonNegative');
+  if(c.abcSetupTotal === 0 || c.abcTestTotal === 0 || c.abcMoveTotal === 0) return t('errABCZero');
+  if(c.unitsA === 0 || c.unitsB === 0) return t('errUnitsZero');
+  if((c.abcSetupA + c.abcSetupB) !== c.abcSetupTotal) return t('errSetup');
+  if((c.abcTestA + c.abcTestB) !== c.abcTestTotal) return t('errTests');
+  if((c.abcMoveA + c.abcMoveB) !== c.abcMoveTotal) return t('errMove');
+  return '';
+}
+
+function calculateAnswers(c){
+  const overhead2025 = round2(c.directCost2024 * (1 + c.ipcaPct / 100));
+  const totalHours = round2(c.directHoursA + c.directHoursB);
+  const hourRate = round2(overhead2025 / totalHours);
+  const allocA = round2(c.directHoursA * hourRate);
+  const allocB = round2(c.directHoursB * hourRate);
+  const unitA = round2(allocA / c.unitsA);
+  const unitB = round2(allocB / c.unitsB);
+
+  const setupRate = round2(c.abcSetupCost / c.abcSetupTotal);
+  const testRate = round2(c.abcTestCost / c.abcTestTotal);
+  const moveRate = round2(c.abcMoveCost / c.abcMoveTotal);
+
+  const aSetup = round2(c.abcSetupA * setupRate);
+  const aTest = round2(c.abcTestA * testRate);
+  const aMove = round2(c.abcMoveA * moveRate);
+  const aTotal = round2(aSetup + aTest + aMove);
+  const aUnit = round2(aTotal / c.unitsA);
+
+  const bSetup = round2(c.abcSetupB * setupRate);
+  const bTest = round2(c.abcTestB * testRate);
+  const bMove = round2(c.abcMoveB * moveRate);
+  const bTotal = round2(bSetup + bTest + bMove);
+  const bUnit = round2(bTotal / c.unitsB);
+
+  return {
+    d_overhead_2025: overhead2025,
+    d_total_hours: totalHours,
+    d_hour_rate: hourRate,
+    d_alloc_a: allocA,
+    d_alloc_b: allocB,
+    d_unit_a: unitA,
+    d_unit_b: unitB,
+    abc_setup_rate: setupRate,
+    abc_test_rate: testRate,
+    abc_move_rate: moveRate,
+    abc_a_setup: aSetup,
+    abc_a_test: aTest,
+    abc_a_move: aMove,
+    abc_a_total: aTotal,
+    abc_unit_a: aUnit,
+    abc_b_setup: bSetup,
+    abc_b_test: bTest,
+    abc_b_move: bMove,
+    abc_b_total: bTotal,
+    abc_unit_b: bUnit
+  };
+}
+
+
+
+function generateMemo(params, answers){
+  const a = answers;
+  const currency = getCurrency();
+
+  const diffA = round2(a.abc_unit_a - a.d_unit_a);
+  const diffB = round2(a.abc_unit_b - a.d_unit_b);
+
+  function fmt(v){
+    return `${currency} ${brNum(v,2)}`;
+  }
+
+  return `
+    <div class="memo-wrap">
+      <div class="memo-title">MEMORANDUM</div>
+      <div class="memo-meta"><strong>To:</strong> Board of Directors</div>
+      <div class="memo-meta"><strong>From:</strong> Strategic Finance Advisory</div>
+      <div class="memo-meta"><strong>Subject:</strong> Cost Allocation Method Assessment – Direct Costing vs. Activity-Based Costing (ABC)</div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Executive Summary</div>
+        <p>This memorandum evaluates the financial and strategic implications of applying a traditional single-rate overhead allocation method (Direct Costing) versus an Activity-Based Costing (ABC) framework. The analysis indicates that the direct method creates cost distortions where products consume support activities at different intensities, while ABC provides a more decision-useful view of product economics by assigning costs according to actual operational drivers.</p>
+      </div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Key Findings</div>
+        <p><strong>Product A:</strong> Direct Costing = ${fmt(a.d_unit_a)} per unit; ABC = ${fmt(a.abc_unit_a)} per unit; Variance = ${fmt(diffA)}</p>
+        <p><strong>Product B:</strong> Direct Costing = ${fmt(a.d_unit_b)} per unit; ABC = ${fmt(a.abc_unit_b)} per unit; Variance = ${fmt(diffB)}</p>
+        <p>The variance confirms that a single allocation base can mask meaningful differences in resource consumption. ABC more accurately reflects the burden created by setups, tests, and material movements, thereby improving cost visibility at the product level.</p>
+      </div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Margin and Pricing Impact</div>
+        <p>The observed differences in unit cost have direct implications for pricing, margin quality, and product mix decisions. Products that are undercosted under the direct method may be priced too aggressively, compressing profitability. Products that are overcosted may become less competitive in the market. ABC supports a more reliable pricing discipline by aligning commercial decisions with the underlying economics of each product.</p>
+      </div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Sensitivity Considerations</div>
+        <p>The gap between the two methodologies is highly sensitive to shifts in activity volumes, production mix, and operating complexity. As the frequency of setups, testing requirements, or material handling events increases, the divergence between Direct Costing and ABC is likely to widen, increasing the risk of managerial misinterpretation if the company relies solely on a single-rate allocation model.</p>
+      </div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Risk Considerations</div>
+        <p>Continued reliance on a simplified overhead allocation structure introduces pricing risk, strategic risk, and operational risk. Misstated product economics can distort customer quotations, capital allocation decisions, and performance assessments. In competitive environments, these distortions may also weaken the company’s market positioning over time.</p>
+      </div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Recommendation</div>
+        <p>We recommend adopting ABC as the primary internal decision-support framework for pricing analysis, profitability review, and strategic planning. The traditional direct costing method may still be maintained for simplicity in external reporting or instructional comparison, but it should not serve as the sole basis for internal management decisions in environments characterized by heterogeneous operational activity.</p>
+      </div>
+
+      <div class="memo-section">
+        <div class="memo-heading">Conclusion</div>
+        <p>ABC enhances cost transparency, strengthens margin analysis, and improves the quality of managerial decision-making. In practical terms, it provides the Board and management with a more reliable basis for evaluating profitability, setting prices, and prioritizing operational improvements.</p>
+      </div>
+    </div>`;
+}
+
+
+function renderDynamic(){
+  const params = getParametersFromInputs();
+  if(validateParameters(params) !== '') return;
+
+  const a = calculateAnswers(params);
+  const abcTotal = round2(params.abcSetupCost + params.abcTestCost + params.abcMoveCost);
+
+  document.getElementById('statDirect2024').textContent = brCurrency(params.directCost2024);
+  document.getElementById('statIpca').textContent = brPct(params.ipcaPct);
+  document.getElementById('statOverhead2025').textContent = brCurrency(a.d_overhead_2025);
+  document.getElementById('statABCTotal').textContent = brCurrency(abcTotal);
+
+  document.getElementById('heroTitle').textContent =
+    `${t('directVsABC')} | A: ${brNum(params.unitsA,0)} ${t('units')} | B: ${brNum(params.unitsB,0)} ${t('units')} | Inflation Index: ${brPct(params.ipcaPct)}`;
+
+  document.getElementById('heroSubtitle').textContent =
+    `${t('currentCasePrefix')}: ${t('lblDirectCost2024').toLowerCase()} = ${brCurrency(params.directCost2024)}, ${t('statLbl3').toLowerCase()} = ${brCurrency(a.d_overhead_2025)}, ${t('statLbl4').toLowerCase()} = ${brCurrency(abcTotal)}. ${t('studentsTry')}`;
+
+  document.getElementById('directFormulaBox').textContent =
+`${t('howCalcDirect')}
+
+1) ${t('ansDirect1')} = ${brCurrency(params.directCost2024)} × (1 + ${brPct(params.ipcaPct)})
+2) ${t('ansDirect1')} = ${brCurrency(a.d_overhead_2025)}
+
+3) ${t('ansDirect2')} = ${brNum(params.directHoursA,0)} + ${brNum(params.directHoursB,0)} = ${brNum(a.d_total_hours,0)}
+4) ${t('ansDirect3')} = ${brCurrency(a.d_overhead_2025)} ÷ ${brNum(a.d_total_hours,0)} = ${brNum(a.d_hour_rate,2)}
+
+5) ${t('ansDirect4')} = ${brNum(params.directHoursA,0)} × ${brNum(a.d_hour_rate,2)} = ${brCurrency(a.d_alloc_a)}
+6) ${t('ansDirect5')} = ${brNum(params.directHoursB,0)} × ${brNum(a.d_hour_rate,2)} = ${brCurrency(a.d_alloc_b)}
+
+7) ${t('ansDirect6')} = ${brCurrency(a.d_alloc_a)} ÷ ${brNum(params.unitsA,0)} = ${brNum(a.d_unit_a,2)}
+8) ${t('ansDirect7')} = ${brCurrency(a.d_alloc_b)} ÷ ${brNum(params.unitsB,0)} = ${brNum(a.d_unit_b,2)}`;
+
+  document.getElementById('directLiveBox').innerHTML =
+    `<strong>${t('directAnswer')}:</strong><br>
+    ${t('productA')} = <strong>${brCurrency(a.d_alloc_a)}</strong> | ${t('ansDirect6')} = <strong>${brNum(a.d_unit_a,2)}</strong>.<br>
+    ${t('productB')} = <strong>${brCurrency(a.d_alloc_b)}</strong> | ${t('ansDirect7')} = <strong>${brNum(a.d_unit_b,2)}</strong>.`;
+
+  document.getElementById('abcFormulaBox').textContent =
+`${t('howCalcABC')}
+
+${t('ansABC1')} = ${brCurrency(params.abcSetupCost)} ÷ ${brNum(params.abcSetupTotal,0)} = ${brNum(a.abc_setup_rate,2)}
+${t('ansABC2')} = ${brCurrency(params.abcTestCost)} ÷ ${brNum(params.abcTestTotal,0)} = ${brNum(a.abc_test_rate,2)}
+${t('ansABC3')} = ${brCurrency(params.abcMoveCost)} ÷ ${brNum(params.abcMoveTotal,0)} = ${brNum(a.abc_move_rate,2)}
+
+${t('productA')}
+${t('ansABC4')}: ${brNum(params.abcSetupA,0)} × ${brNum(a.abc_setup_rate,2)} = ${brCurrency(a.abc_a_setup)}
+${t('ansABC5')}: ${brNum(params.abcTestA,0)} × ${brNum(a.abc_test_rate,2)} = ${brCurrency(a.abc_a_test)}
+${t('ansABC6')}: ${brNum(params.abcMoveA,0)} × ${brNum(a.abc_move_rate,2)} = ${brCurrency(a.abc_a_move)}
+${t('ansABC7')} = ${brCurrency(a.abc_a_total)}
+${t('ansABC8')} = ${brCurrency(a.abc_a_total)} ÷ ${brNum(params.unitsA,0)} = ${brNum(a.abc_unit_a,2)}
+
+${t('productB')}
+${t('ansABC9')}: ${brNum(params.abcSetupB,0)} × ${brNum(a.abc_setup_rate,2)} = ${brCurrency(a.abc_b_setup)}
+${t('ansABC10')}: ${brNum(params.abcTestB,0)} × ${brNum(a.abc_test_rate,2)} = ${brCurrency(a.abc_b_test)}
+${t('ansABC11')}: ${brNum(params.abcMoveB,0)} × ${brNum(a.abc_move_rate,2)} = ${brCurrency(a.abc_b_move)}
+${t('ansABC12')} = ${brCurrency(a.abc_b_total)}
+${t('ansABC13')} = ${brCurrency(a.abc_b_total)} ÷ ${brNum(params.unitsB,0)} = ${brNum(a.abc_unit_b,2)}`;
+
+  document.getElementById('abcLiveBox').innerHTML =
+    `<strong>${t('abcAnswer')}:</strong><br>
+    ${t('productA')} = <strong>${brCurrency(a.abc_a_total)}</strong> | ${t('ansABC8')} = <strong>${brNum(a.abc_unit_a,2)}</strong>.<br>
+    ${t('productB')} = <strong>${brCurrency(a.abc_b_total)}</strong> | ${t('ansABC13')} = <strong>${brNum(a.abc_unit_b,2)}</strong>.`;
+
+  const diffA = round2(a.abc_unit_a - a.d_unit_a);
+  const diffB = round2(a.abc_unit_b - a.d_unit_b);
+
+  document.getElementById('decisionMemo').innerHTML = generateMemo(params, a);
+
+  document.getElementById('compareBox').innerHTML =
+    `<strong>${t('methodComparison')}:</strong><br>
+    ${t('productA')} — Direct: <strong>${brNum(a.d_unit_a,2)}</strong> vs ABC: <strong>${brNum(a.abc_unit_a,2)}</strong> | ${t('difference')}: <strong>${brNum(diffA,2)}</strong><br>
+    ${t('productB')} — Direct: <strong>${brNum(a.d_unit_b,2)}</strong> vs ABC: <strong>${brNum(a.abc_unit_b,2)}</strong> | ${t('difference')}: <strong>${brNum(diffB,2)}</strong><br><br>
+    ${t('methodExplain')}`;
+}
+
+function applyParameters(){
+  const params = getParametersFromInputs();
+  const error = validateParameters(params);
+  if(error){
+    document.getElementById('feedbackBox').innerHTML = `<span class="bad"><strong>${t('error')}:</strong> ${error}</span>`;
+    return;
+  }
+  currentCase = params;
+  currentCase.answers = calculateAnswers(currentCase);
+  renderDynamic();
+  clearChecks();
+  clearStudentInputs();
+  lastFeedbackKey = 'caseUpdated';
+  document.getElementById('feedbackBox').innerHTML = t(lastFeedbackKey);
+  document.getElementById('caseNarrative').textContent = t('narrative');
+}
+
+function compareValue(student, expected){
+  if(student === '' || student === null) return false;
+  return Math.abs(Number(student) - Number(expected)) <= 0.8;
+}
+
+function markField(id, ok){
+  const input = document.getElementById(id);
+  const cell = document.getElementById('c_' + id);
+  input.classList.remove('correct','incorrect');
+  input.classList.add(ok ? 'correct' : 'incorrect');
+  cell.innerHTML = ok ? '<span class="ok">✔</span>' : '<span class="bad">✘</span>';
+}
+
+function checkAnswers(){
+  const params = getParametersFromInputs();
+  const error = validateParameters(params);
+  if(error){
+    document.getElementById('feedbackBox').innerHTML = `<span class="bad"><strong>${t('error')}:</strong> ${error}</span>`;
+    return;
+  }
+  currentCase = params;
+  currentCase.answers = calculateAnswers(currentCase);
+
+  const keys = Object.keys(currentCase.answers);
+  let correct = 0;
+  keys.forEach(key => {
+    const val = document.getElementById(key).value;
+    const ok = compareValue(val, currentCase.answers[key]);
+    markField(key, ok);
+    if(ok) correct++;
+  });
+
+  const total = keys.length;
+  const pct = round2(correct / total * 100);
+  let msg = `<strong>${t('result')}:</strong> ${correct} of ${total} correct (${pct}%).<br>`;
+  if(correct === total){
+    msg += `<span class="ok"><strong>${t('excellent')}</strong> ${t('allCorrect')}</span>`;
+  } else if(correct >= total * 0.7){
+    msg += `<span style="color:#92400e;"><strong>${t('goodWork')}</strong> ${t('fewReview')}</span>`;
+  } else {
+    msg += `<span class="bad"><strong>${t('reviewFormulas')}</strong> ${t('checkRate')}</span>`;
+  }
+  document.getElementById('feedbackBox').innerHTML = msg;
+}
+
+function resetExercise(){
+  clearStudentInputs();
+  clearChecks();
+  lastFeedbackKey = 'studentCleared';
+  document.getElementById('feedbackBox').innerHTML = t(lastFeedbackKey);
+  document.getElementById('caseNarrative').textContent = t('narrative');
+}
+
+function randomInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+function splitInt(total, minPart=1){
+  const a = randomInt(minPart, total - minPart);
+  return [a, total - a];
+}
+
+function generateRandomCase(){
+  const directTotalHours = randomInt(1200, 2600);
+  const [directHoursA, directHoursB] = splitInt(directTotalHours, 200);
+
+  const abcSetupTotal = randomInt(8, 20);
+  const abcTestTotal = randomInt(18, 50);
+  const abcMoveTotal = randomInt(24, 60);
+
+  const [abcSetupA, abcSetupB] = splitInt(abcSetupTotal, 1);
+  const [abcTestA, abcTestB] = splitInt(abcTestTotal, 1);
+  const [abcMoveA, abcMoveB] = splitInt(abcMoveTotal, 1);
+
+  const c = {
+    directCost2024: randomInt(80000, 220000),
+    ipcaPct: randomInt(0, 12),
+    directHoursA,
+    directHoursB,
+    unitsA: randomInt(300, 1200),
+    unitsB: randomInt(200, 900),
+
+    abcSetupCost: randomInt(25000, 70000),
+    abcSetupDriver: 'no. setups',
+    abcSetupTotal,
+    abcSetupA,
+    abcSetupB,
+
+    abcTestCost: randomInt(18000, 60000),
+    abcTestDriver: 'no. tests',
+    abcTestTotal,
+    abcTestA,
+    abcTestB,
+
+    abcMoveCost: randomInt(20000, 65000),
+    abcMoveDriver: 'movements',
+    abcMoveTotal,
+    abcMoveA,
+    abcMoveB
+  };
+  populateParameterInputs(c);
+  applyParameters();
+  lastFeedbackKey = 'randomApplied';
+  document.getElementById('feedbackBox').innerHTML = t(lastFeedbackKey);
+  document.getElementById('caseNarrative').textContent = t('narrative');
+}
+
+function loadProvidedCase(){
+  const c = {
+    directCost2024: 100000,
+    ipcaPct: 8,
+    directHoursA: 1000,
+    directHoursB: 500,
+    unitsA: 1000,
+    unitsB: 500,
+
+    abcSetupCost: 40000,
+    abcSetupDriver: 'no. setups',
+    abcSetupTotal: 10,
+    abcSetupA: 4,
+    abcSetupB: 6,
+
+    abcTestCost: 30000,
+    abcTestDriver: 'no. tests',
+    abcTestTotal: 30,
+    abcTestA: 10,
+    abcTestB: 20,
+
+    abcMoveCost: 38000,
+    abcMoveDriver: 'movements',
+    abcMoveTotal: 40,
+    abcMoveA: 30,
+    abcMoveB: 10
+  };
+  populateParameterInputs(c);
+  applyParameters();
+  lastFeedbackKey = 'exampleLoaded';
+  document.getElementById('feedbackBox').innerHTML = t(lastFeedbackKey);
+  document.getElementById('caseNarrative').textContent = t('narrative');
+}
+
+
+function fillPrompt(n){
+  const key = 'prompt' + n;
+  document.getElementById('askPrompt').textContent = t(key);
+}
+
+function copyPrompt(){
+  fillPrompt(1);
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id && e.target.id.startsWith('p_')) {
+    const params = getParametersFromInputs();
+    if (validateParameters(params) === '') {
+      renderDynamic();
+    }
+  }
+});
+
+applyStaticTranslations();
+fillPrompt(1);
+loadProvidedCase();
+</script>
+</body>
+</html>
